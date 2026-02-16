@@ -1,0 +1,51 @@
+#
+# ItemsAdderUploadPlus configuration
+# Quick start:
+# 1) Fill s3.bucket, s3.access_key, s3.secret_key (and s3.endpoint for non-AWS).
+# 2) Optionally set s3.public_url_base for CDN/public domain.
+# 3) Run /iazip or /iareload to trigger auto upload.
+#
+global:
+  uid: '93266666-9320-7451-0239-66662fa66666' # Generated on first start if missing
+  output_file: 'plugins/ItemsAdder/output/generated.zip'
+  update_itemsadder_config: true
+  auto_iareload_after_manual_upload: false # If true, successful /iaup upload triggers /iareload
+  itemsadder_config_path: '' # Optional override, leave empty to auto-detect
+  auto_upload_on_pack: true
+  cache_bust:
+    enabled: true
+    param: 'v'
+    mode: 'timestamp' # timestamp | uuid
+
+s3:
+  endpoint: 'https://s3.amazonaws.com'
+  region: 'us-east-1'
+  bucket: 'my-bucket'
+  access_key: ''
+  secret_key: ''
+  session_token: ''
+  path_scheme: 'itemsadder/{uid}/{file}' # Placeholders: {uid} {file} {name} {ext} {date} {ts}
+  path_style: false
+  acl: 'public-read' # Examples: public-read, private, bucket-owner-full-control, none
+  use_presigned_url: false # If true, ItemsAdder will use a signed URL that expires
+  presigned_expiry_seconds: 3600
+  public_url_base: '' # Optional CDN/public base, e.g. https://cdn.example.com
+  # If use_presigned_url is true, public_url_base is ignored.
+  # If use_presigned_url is false, make the bucket public or use a CDN base.
+
+# Cloudflare R2 quick guide:
+# - endpoint: https://<accountid>.r2.cloudflarestorage.com
+# - region: auto
+# - path_style: true
+# - public_url_base: https://<your-public-domain> (or R2 public bucket URL)
+# - acl: private (R2 ignores ACLs)
+
+locale:
+  reload: 'Reload complete.'
+  upload-start: 'Uploading ItemsAdder pack...'
+  upload-in-progress: 'Upload already in progress.'
+  upload-success: 'Upload complete. Run /iareload to apply.'
+  upload-failed: 'Upload failed. Check console for details.'
+  missing-pack: 'Pack file not found. Run /iazip to generate it.'
+  ia-update-success: 'ItemsAdder config updated.'
+  ia-update-failed: 'Failed to update ItemsAdder config.'

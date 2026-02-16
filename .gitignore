@@ -1,0 +1,46 @@
+# Generated from gitignore.io: java,gradle,macos,windows,linux,intellij,eclipse,vscode
+
+### Java ###
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+### Gradle ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Eclipse ###
+.project
+.classpath
+.c9/
+.settings/
+*.launch
+
+### VS Code ###
+.vscode/
+
+### OS ###
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~

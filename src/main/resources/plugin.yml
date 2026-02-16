@@ -1,0 +1,11 @@
+name: ItemsAdderUploadPlus
+version: ${version}
+main: net.langdua.iaup.ItemsAdderUploadPlus
+authors: [LangDuaMC, stdpi]
+depend: [ItemsAdder]
+commands:
+  iaup:
+    description: Upload ItemsAdder resourcepacks to S3
+    usage: /<command> [upload|reload]
+    permission: iaup.op
+    permission-message: You don't have <permission>

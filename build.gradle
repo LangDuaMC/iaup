@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'net.langdua.iaup'
+version = '2.0.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'spigotmc'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        name = 'md-5-snapshots'
+        url = 'https://repo.md-5.net/content/repositories/snapshots/'
+    }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT'
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+}
+
+def targetJavaVersion = 8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = targetJavaVersion
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+}
+
+jar {
+    enabled = false
+}
+
+build.dependsOn shadowJar
