@@ -29,6 +29,9 @@ jobs:
     permissions:
       contents: write
       issues: write
+    env:
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
     steps:
       - name: Parse command and authorization
         id: parse
@@ -177,10 +180,8 @@ jobs:
           echo "name=$(basename "$artifact")" >> "$GITHUB_OUTPUT"
 
       - name: Publish to Modrinth
-        if: secrets.MODRINTH_TOKEN != '' && secrets.MODRINTH_PROJECT_ID != ''
+        if: env.MODRINTH_TOKEN != '' && env.MODRINTH_PROJECT_ID != ''
         env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
           VERSION: ${{ steps.bump.outputs.next }}
           VERSION_TYPE: release
           GAME_VERSIONS_JSON: ${{ vars.MODRINTH_GAME_VERSIONS || '["1.20.1"]' }}
@@ -218,7 +219,7 @@ jobs:
             https://api.modrinth.com/v2/version
 
       - name: Comment Modrinth setup hint
-        if: github.event_name == 'issue_comment' && (secrets.MODRINTH_TOKEN == '' || secrets.MODRINTH_PROJECT_ID == '')
+        if: github.event_name == 'issue_comment' && (env.MODRINTH_TOKEN == '' || env.MODRINTH_PROJECT_ID == '')
         uses: actions/github-script@v7
         with:
           script: |
