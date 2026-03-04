@@ -169,7 +169,9 @@ public final class ItemsAdderUploadPlus extends JavaPlugin implements CommandExe
                     if (snapshot.updateItemsAdderConfig()) {
                         messages.send(sender, iaUpdated ? "locale.ia-update-success" : "locale.ia-update-failed");
                     }
-                    if (manualUpload && snapshot.autoIareloadAfterManualUpload()) {
+                    boolean autoUpload = "itemsadder-pack-compressed".equalsIgnoreCase(reason);
+                    if (iaUpdated && ((manualUpload && snapshot.autoIareloadAfterManualUpload())
+                            || (autoUpload && snapshot.autoIareloadAfterAutoUpload()))) {
                         Bukkit.getScheduler().runTask(ItemsAdderUploadPlus.this, new Runnable() {
                             @Override
                             public void run() {
@@ -178,7 +180,7 @@ public final class ItemsAdderUploadPlus extends JavaPlugin implements CommandExe
                                 }
                                 boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "iareload");
                                 if (!ok) {
-                                    getLogger().warning("Failed to dispatch /iareload after successful manual upload.");
+                                    getLogger().warning("Failed to dispatch /iareload after successful upload (reason=" + reason + ").");
                                 }
                             }
                         });

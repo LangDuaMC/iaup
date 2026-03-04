@@ -10,6 +10,7 @@ global:
   output_file: 'plugins/ItemsAdder/output/generated.zip'
   update_itemsadder_config: true
   auto_iareload_after_manual_upload: false # If true, successful /iaup upload triggers /iareload
+  auto_iareload_after_auto_upload: false  # If true, successful auto-upload (from /iazip) triggers /iareload
   itemsadder_config_path: '' # Optional override, leave empty to auto-detect
   auto_upload_on_pack: true
   cache_bust:

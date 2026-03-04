@@ -11,19 +11,21 @@ public final class PluginSettings {
     private final File outputFile;
     private final boolean updateItemsAdderConfig;
     private final boolean autoIareloadAfterManualUpload;
+    private final boolean autoIareloadAfterAutoUpload;
     private final String itemsAdderConfigPathOverride;
     private final boolean autoUploadOnPack;
     private final CacheBust cacheBust;
     private final S3 s3;
 
     private PluginSettings(String uid, File outputFile, boolean updateItemsAdderConfig,
-                           boolean autoIareloadAfterManualUpload,
+                           boolean autoIareloadAfterManualUpload, boolean autoIareloadAfterAutoUpload,
                            String itemsAdderConfigPathOverride, boolean autoUploadOnPack,
                            CacheBust cacheBust, S3 s3) {
         this.uid = uid;
         this.outputFile = outputFile;
         this.updateItemsAdderConfig = updateItemsAdderConfig;
         this.autoIareloadAfterManualUpload = autoIareloadAfterManualUpload;
+        this.autoIareloadAfterAutoUpload = autoIareloadAfterAutoUpload;
         this.itemsAdderConfigPathOverride = itemsAdderConfigPathOverride;
         this.autoUploadOnPack = autoUploadOnPack;
         this.cacheBust = cacheBust;
@@ -40,14 +42,15 @@ public final class PluginSettings {
         File outputFile = new File(cfg.getString("global.output_file", "plugins/ItemsAdder/output/generated.zip"));
         boolean updateItemsAdderConfig = cfg.getBoolean("global.update_itemsadder_config", true);
         boolean autoIareloadAfterManualUpload = cfg.getBoolean("global.auto_iareload_after_manual_upload", false);
+        boolean autoIareloadAfterAutoUpload = cfg.getBoolean("global.auto_iareload_after_auto_upload", false);
         String itemsAdderConfigPathOverride = cfg.getString("global.itemsadder_config_path", "").trim();
         boolean autoUploadOnPack = cfg.getBoolean("global.auto_upload_on_pack", true);
 
         CacheBust cacheBust = CacheBust.fromConfig(cfg);
         S3 s3 = S3.fromConfig(cfg);
 
-        return new PluginSettings(uid, outputFile, updateItemsAdderConfig, autoIareloadAfterManualUpload, itemsAdderConfigPathOverride,
-                autoUploadOnPack, cacheBust, s3);
+        return new PluginSettings(uid, outputFile, updateItemsAdderConfig, autoIareloadAfterManualUpload, autoIareloadAfterAutoUpload,
+                itemsAdderConfigPathOverride, autoUploadOnPack, cacheBust, s3);
     }
 
     public String uid() {
@@ -64,6 +67,10 @@ public final class PluginSettings {
 
     public boolean autoIareloadAfterManualUpload() {
         return autoIareloadAfterManualUpload;
+    }
+
+    public boolean autoIareloadAfterAutoUpload() {
+        return autoIareloadAfterAutoUpload;
     }
 
     public String itemsAdderConfigPathOverride() {
