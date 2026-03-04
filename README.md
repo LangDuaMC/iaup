@@ -125,3 +125,23 @@ Replace `<bucket-name>` with your bucket name.
 ## Commands
 - `/iaup upload` uploads the pack immediately
 - `/iaup reload` reloads IAUP config and rebinds hooks
+
+## CI/CD Release
+- `Build` workflow runs on push/PR to `main`.
+- `Release` workflow is separate and supports:
+1. Comment command: `/release`, `/release patch`, `/release minor`, `/release major`
+2. Manual dispatch: run `Release` workflow and choose bump type
+
+Release workflow does:
+1. Bumps `version` in `gradle.properties` (semver)
+2. Builds artifacts
+3. Commits version bump, tags `vX.Y.Z`, pushes to `main`
+4. Creates GitHub Release with JAR assets
+
+Optional Modrinth publish during release:
+- Required secrets:
+1. `MODRINTH_TOKEN`
+2. `MODRINTH_PROJECT_ID`
+- Optional repository variables:
+1. `MODRINTH_GAME_VERSIONS` (JSON array, default `["1.20.1"]`)
+2. `MODRINTH_LOADERS` (JSON array, default `["paper","spigot","purpur"]`)
