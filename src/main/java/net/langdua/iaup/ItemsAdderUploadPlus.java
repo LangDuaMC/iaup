@@ -162,71 +162,85 @@ public final class ItemsAdderUploadPlus extends JavaPlugin implements CommandExe
         final boolean manualUpload = "manual".equalsIgnoreCase(reason);
         messages.send(sender, "locale.upload-start");
 
-        Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!lifecycle.isCurrent(runEpoch)) {
-                        return;
-                    }
+        try {
+            Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (!lifecycle.isCurrent(runEpoch)) {
+                            return;
+                        }
 
-                    S3UploadService.UploadResult result = new S3UploadService(snapshot.s3())
-                            .upload(packFile, snapshot.uid(), snapshot.cacheBust());
+                        S3UploadService.UploadResult result = new S3UploadService(snapshot.s3())
+                                .upload(packFile, snapshot.uid(), snapshot.cacheBust());
 
-                    if (!lifecycle.isCurrent(runEpoch)) {
-                        return;
-                    }
+                        if (!lifecycle.isCurrent(runEpoch)) {
+                            return;
+                        }
 
-                    boolean iaUpdated = true;
-                    if (snapshot.updateItemsAdderConfig()) {
-                        File iaConfig = resolveItemsAdderConfigFile(snapshot);
-                        iaUpdated = iaConfigUpdater.update(iaConfig, result.downloadUrl());
-                    }
+                        boolean iaUpdated = true;
+                        if (snapshot.updateItemsAdderConfig()) {
+                            File iaConfig = resolveItemsAdderConfigFile(snapshot);
+                            iaUpdated = iaConfigUpdater.update(iaConfig, result.downloadUrl());
+                        }
 
-                    if (!lifecycle.isCurrent(runEpoch)) {
-                        return;
-                    }
+                        if (!lifecycle.isCurrent(runEpoch)) {
+                            return;
+                        }
 
-                    messages.send(sender, "locale.upload-success");
-                    if (snapshot.updateItemsAdderConfig()) {
-                        messages.send(sender, iaUpdated ? "locale.ia-update-success" : "locale.ia-update-failed");
-                    }
-                    boolean autoUpload = "itemsadder-pack-compressed".equalsIgnoreCase(reason);
-                    boolean shouldAutoReload = iaUpdated && ((manualUpload && snapshot.autoIareloadAfterManualUpload())
-                            || (autoUpload && snapshot.autoIareloadAfterAutoUpload()));
-                    if (shouldAutoReload) {
-                        Bukkit.getScheduler().runTask(ItemsAdderUploadPlus.this, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (!lifecycle.isCurrent(runEpoch)) {
-                                    getLogger().fine("Skipped /iareload dispatch because upload epoch is no longer current (reason=" + reason + ").");
-                                    return;
-                                }
-                                boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "iareload");
-                                if (!ok) {
-                                    getLogger().warning("Failed to dispatch /iareload after successful upload (reason=" + reason + ").");
-                                } else {
-                                    getLogger().info("Dispatched /iareload after successful upload (reason=" + reason + ").");
-                                }
+                        messages.send(sender, "locale.upload-success");
+                        if (snapshot.updateItemsAdderConfig()) {
+                            messages.send(sender, iaUpdated ? "locale.ia-update-success" : "locale.ia-update-failed");
+                        }
+                        boolean autoUpload = "itemsadder-pack-compressed".equalsIgnoreCase(reason);
+                        boolean shouldAutoReload = iaUpdated && ((manualUpload && snapshot.autoIareloadAfterManualUpload())
+                                || (autoUpload && snapshot.autoIareloadAfterAutoUpload()));
+                        if (shouldAutoReload) {
+                            try {
+                                Bukkit.getScheduler().runTask(ItemsAdderUploadPlus.this, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!lifecycle.isCurrent(runEpoch)) {
+                                            getLogger().fine("Skipped /iareload dispatch because upload epoch is no longer current (reason=" + reason + ").");
+                                            return;
+                                        }
+                                        try {
+                                            boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "iareload");
+                                            if (!ok) {
+                                                getLogger().warning("Failed to dispatch /iareload after successful upload (reason=" + reason + ").");
+                                            } else {
+                                                getLogger().info("Dispatched /iareload after successful upload (reason=" + reason + ").");
+                                            }
+                                        } catch (Throwable dispatchError) {
+                                            getLogger().warning("Error while dispatching /iareload (reason=" + reason + "): " + dispatchError.getMessage());
+                                        }
+                                    }
+                                });
+                            } catch (Exception scheduleError) {
+                                getLogger().warning("Failed to schedule /iareload dispatch (reason=" + reason + "): " + scheduleError.getMessage());
                             }
-                        });
-                    } else {
-                        getLogger().fine("Auto /iareload not dispatched (reason=" + reason
-                                + ", iaUpdated=" + iaUpdated
-                                + ", manualFlag=" + snapshot.autoIareloadAfterManualUpload()
-                                + ", autoFlag=" + snapshot.autoIareloadAfterAutoUpload() + ").");
+                        } else {
+                            getLogger().fine("Auto /iareload not dispatched (reason=" + reason
+                                    + ", iaUpdated=" + iaUpdated
+                                    + ", manualFlag=" + snapshot.autoIareloadAfterManualUpload()
+                                    + ", autoFlag=" + snapshot.autoIareloadAfterAutoUpload() + ").");
+                        }
+                    } catch (Throwable e) {
+                        getLogger().warning("Upload failed (" + reason + "): " + e.getMessage());
+                        e.printStackTrace();
+                        if (lifecycle.isCurrent(runEpoch)) {
+                            messages.send(sender, "locale.upload-failed");
+                        }
+                    } finally {
+                        uploadInProgress.set(false);
                     }
-                } catch (Exception e) {
-                    getLogger().warning("Upload failed (" + reason + "): " + e.getMessage());
-                    e.printStackTrace();
-                    if (lifecycle.isCurrent(runEpoch)) {
-                        messages.send(sender, "locale.upload-failed");
-                    }
-                } finally {
-                    uploadInProgress.set(false);
                 }
-            }
-        });
+            });
+        } catch (Exception scheduleError) {
+            uploadInProgress.set(false);
+            getLogger().warning("Failed to schedule async upload task (" + reason + "): " + scheduleError.getMessage());
+            messages.send(sender, "locale.upload-failed");
+        }
     }
 
     private File resolveItemsAdderConfigFile(PluginSettings snapshot) {

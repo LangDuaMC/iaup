@@ -2,6 +2,7 @@ package net.langdua.iaup.service;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.IllegalPluginAccessException;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MessageService {
@@ -21,14 +22,29 @@ public final class MessageService {
             return;
         }
         if (!plugin.isEnabled()) {
-            sender.sendMessage(msg);
+            safeSendDirect(sender, msg);
             return;
         }
-        Bukkit.getScheduler().runTask(plugin, new Runnable() {
-            @Override
-            public void run() {
-                sender.sendMessage(msg);
-            }
-        });
+
+        try {
+            Bukkit.getScheduler().runTask(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    safeSendDirect(sender, msg);
+                }
+            });
+        } catch (IllegalPluginAccessException e) {
+            safeSendDirect(sender, msg);
+        } catch (Exception e) {
+            plugin.getLogger().fine("Message scheduling failed: " + e.getMessage());
+            safeSendDirect(sender, msg);
+        }
+    }
+
+    private void safeSendDirect(CommandSender sender, String msg) {
+        try {
+            sender.sendMessage(msg);
+        } catch (Throwable ignored) {
+        }
     }
 }
