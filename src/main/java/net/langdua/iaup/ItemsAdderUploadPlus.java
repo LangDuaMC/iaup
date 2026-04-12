@@ -75,28 +75,50 @@ public final class ItemsAdderUploadPlus extends JavaPlugin implements CommandExe
     }
 
     private void reloadPlugin(CommandSender sender) {
-        lifecycle.beginNewEpoch();
-        uploadInProgress.set(false);
-
-        if (!loadSettings()) {
+        PluginSettings previous = settings;
+        PluginSettings reloaded;
+        try {
+            reloaded = parseSettings();
+        } catch (Exception e) {
+            getLogger().warning("Reload rejected due to invalid configuration: " + e.getMessage());
             messages.send(sender, "locale.upload-failed");
             return;
         }
 
-        rebindHooks();
-        messages.send(sender, "locale.reload");
+        try {
+            lifecycle.beginNewEpoch();
+            uploadInProgress.set(false);
+            settings = reloaded;
+            rebindHooks();
+            messages.send(sender, "locale.reload");
+        } catch (Exception e) {
+            getLogger().warning("Reload failed: " + e.getMessage());
+            e.printStackTrace();
+            settings = previous;
+            try {
+                rebindHooks();
+            } catch (Exception rollbackError) {
+                getLogger().warning("Rollback hook rebind failed: " + rollbackError.getMessage());
+            }
+            messages.send(sender, "locale.upload-failed");
+        }
     }
 
     private boolean loadSettings() {
-        reloadConfig();
         try {
-            settings = PluginSettings.fromConfig(getConfig());
-            saveConfig();
+            settings = parseSettings();
             return true;
         } catch (Exception e) {
             getLogger().warning("Invalid configuration: " + e.getMessage());
             return false;
         }
+    }
+
+    private PluginSettings parseSettings() {
+        reloadConfig();
+        PluginSettings parsed = PluginSettings.fromConfig(getConfig());
+        saveConfig();
+        return parsed;
     }
 
     private void rebindHooks() {
@@ -170,20 +192,29 @@ public final class ItemsAdderUploadPlus extends JavaPlugin implements CommandExe
                         messages.send(sender, iaUpdated ? "locale.ia-update-success" : "locale.ia-update-failed");
                     }
                     boolean autoUpload = "itemsadder-pack-compressed".equalsIgnoreCase(reason);
-                    if (iaUpdated && ((manualUpload && snapshot.autoIareloadAfterManualUpload())
-                            || (autoUpload && snapshot.autoIareloadAfterAutoUpload()))) {
+                    boolean shouldAutoReload = iaUpdated && ((manualUpload && snapshot.autoIareloadAfterManualUpload())
+                            || (autoUpload && snapshot.autoIareloadAfterAutoUpload()));
+                    if (shouldAutoReload) {
                         Bukkit.getScheduler().runTask(ItemsAdderUploadPlus.this, new Runnable() {
                             @Override
                             public void run() {
                                 if (!lifecycle.isCurrent(runEpoch)) {
+                                    getLogger().fine("Skipped /iareload dispatch because upload epoch is no longer current (reason=" + reason + ").");
                                     return;
                                 }
                                 boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "iareload");
                                 if (!ok) {
                                     getLogger().warning("Failed to dispatch /iareload after successful upload (reason=" + reason + ").");
+                                } else {
+                                    getLogger().info("Dispatched /iareload after successful upload (reason=" + reason + ").");
                                 }
                             }
                         });
+                    } else {
+                        getLogger().fine("Auto /iareload not dispatched (reason=" + reason
+                                + ", iaUpdated=" + iaUpdated
+                                + ", manualFlag=" + snapshot.autoIareloadAfterManualUpload()
+                                + ", autoFlag=" + snapshot.autoIareloadAfterAutoUpload() + ").");
                     }
                 } catch (Exception e) {
                     getLogger().warning("Upload failed (" + reason + "): " + e.getMessage());

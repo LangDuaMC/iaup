@@ -38,12 +38,16 @@ Common options:
    Supports placeholders: `{uid} {file} {name} {ext} {date} {ts}`
 4. `s3.public_url_base`
    Use when the bucket is publicly readable via a known domain (CDN/custom domain).
+   URL is built as `<public_url_base>/<path_scheme-resolved-objectKey>`.
+   IAUP does not auto-prepend `s3.bucket` when this is set and `s3.use_presigned_url: false`.
 5. `s3.use_presigned_url`
    Use when you do not want a public bucket. The URL will expire (`s3.presigned_expiry_seconds`).
 
 Auto reload after manual upload:
 - `global.auto_iareload_after_manual_upload: true`
   When enabled, a successful `/iaup upload` triggers `/iareload`.
+- `global.auto_iareload_after_auto_upload: true`
+  When enabled, successful auto-upload from `iazip` flow also triggers `/iareload`.
 
 ### 4) Permissions / Policies
 
@@ -54,6 +58,10 @@ Either is needed:
 - S3 endpoint is public-readable
 
 If you use `s3.use_presigned_url: true`, the pack URL is a signed URL and can work with private buckets. However, this may lead to client redownload cached pack...
+
+Path-style endpoint note:
+- Bucket prefix in generated URL (`/<bucket>/<object>`) is only applied on endpoint path-style branch.
+- If `s3.public_url_base` is set, generated URL uses that base directly with object key path.
 
 #### Example: Bucket policy for public reads (AWS/MinIO/RustFS)
 Replace `<bucket-name>` with your bucket name.

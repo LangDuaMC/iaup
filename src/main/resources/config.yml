@@ -33,6 +33,8 @@ s3:
   public_url_base: '' # Optional CDN/public base, e.g. https://cdn.example.com
   # If use_presigned_url is true, public_url_base is ignored.
   # If use_presigned_url is false, make the bucket public or use a CDN base.
+  # When public_url_base is set, URL shape is <public_url_base>/<resolved path_scheme>.
+  # In that mode IAUP does not auto-prepend bucket into URL path.
 
 # Cloudflare R2 quick guide:
 # - endpoint: https://<accountid>.r2.cloudflarestorage.com
