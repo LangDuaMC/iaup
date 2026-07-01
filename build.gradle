@@ -1,9 +1,15 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.4.3'
 }
 
 group = 'net.langdua.iaup'
+
+ext {
+    awsSdkVersion = '1.12.797'
+    jaxbApiVersion = '2.3.1'
+    jaxbRuntimeVersion = '2.3.8'
+}
 
 repositories {
     mavenCentral()
@@ -19,7 +25,9 @@ repositories {
 
 dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT'
-    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.767'
+    implementation "com.amazonaws:aws-java-sdk-s3:${awsSdkVersion}"
+    runtimeOnly "javax.xml.bind:jaxb-api:${jaxbApiVersion}"
+    runtimeOnly "org.glassfish.jaxb:jaxb-runtime:${jaxbRuntimeVersion}"
 }
 
 def targetJavaVersion = 8
@@ -44,6 +52,18 @@ processResources {
 
 shadowJar {
     archiveClassifier.set('')
+    mergeServiceFiles()
+
+    relocate 'com.amazonaws', 'net.langdua.iaup_vendor.com.amazonaws'
+    relocate 'com.fasterxml.jackson', 'net.langdua.iaup_vendor.com.fasterxml.jackson'
+    relocate 'org.apache.commons', 'net.langdua.iaup_vendor.org.apache.commons'
+    relocate 'org.joda', 'net.langdua.iaup_vendor.org.joda'
+    relocate 'javax.xml.bind', 'net.langdua.iaup_vendor.javax.xml.bind'
+    relocate 'javax.activation', 'net.langdua.iaup_vendor.javax.activation'
+    relocate 'org.glassfish.jaxb', 'net.langdua.iaup_vendor.org.glassfish.jaxb'
+    relocate 'com.sun.xml', 'net.langdua.iaup_vendor.com.sun.xml'
+    relocate 'com.sun.istack', 'net.langdua.iaup_vendor.com.sun.istack'
+    relocate 'org.jvnet.staxex', 'net.langdua.iaup_vendor.org.jvnet.staxex'
 }
 
 jar {
